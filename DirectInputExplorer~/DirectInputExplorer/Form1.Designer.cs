@@ -1255,7 +1255,7 @@ namespace DirectInputExplorer
             GBCuss.TabIndex = 1;
             GBCuss.TabStop = false;
             GBCuss.Tag = "CustomForce";
-            GBCuss.Text = "   CustomForce";
+            GBCuss.Text = "   CustomForce (Not Implemented)";
             // 
             // UDCustomForceSamplePeriod
             // 

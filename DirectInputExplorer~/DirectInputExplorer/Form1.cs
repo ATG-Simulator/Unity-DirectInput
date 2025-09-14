@@ -25,7 +25,7 @@ namespace DirectInputExplorer
             DIManager.OnDeviceAdded += DIDeviceAdded;   // Register handler for when a device is attached
             DIManager.OnDeviceRemoved += DIDeviceRemoved; // Register handler for when a device is removed
             ButtonEnumerateDevices.PerformClick();
-            if (DIManager.devices.Length != 0) { ComboBoxDevices.SelectedIndex = 0; } // Select first device by default
+            if (DIManager.Devices.Length != 0) { ComboBoxDevices.SelectedIndex = 0; } // Select first device by default
 
             // Disable tabs until device is attached
             foreach (TabPage tab in TabController.TabPages)
@@ -43,32 +43,31 @@ namespace DirectInputExplorer
 
         private void ButtonEnumerateDevices_Click(object sender, EventArgs e)
         {
-            string ExistingGUID = ComboBoxDevices.SelectedIndex != -1 ? DIManager.devices[ComboBoxDevices.SelectedIndex].guidInstance : ""; // GUID of device selected, empty if not
+            string ExistingGUID = ComboBoxDevices.SelectedIndex != -1 ? DIManager.Devices[ComboBoxDevices.SelectedIndex].guidInstance : ""; // GUID of device selected, empty if not
             DIManager.EnumerateDevices(); // Fetch currently plugged in devices
 
             ComboBoxDevices.Items.Clear();
-            foreach (DeviceInfo device in DIManager.devices)
+            foreach (DeviceInfo device in DIManager.Devices)
             {
                 ComboBoxDevices.Items.Add(device.productName);
             }
 
-            if (!String.IsNullOrEmpty(ExistingGUID)) { ComboBoxDevices.SelectedIndex = Array.FindIndex(DIManager.devices, d => d.guidInstance == ExistingGUID); } // Reselect that device
+            if (!String.IsNullOrEmpty(ExistingGUID)) { ComboBoxDevices.SelectedIndex = Array.FindIndex(DIManager.Devices, d => d.guidInstance == ExistingGUID); } // Reselect that device
         }
 
         private void ComboBoxDevices_SelectedIndexChanged(object sender, EventArgs e)
         {
-            UpdateReadoutsWithDeviceData(DIManager.devices[ComboBoxDevices.SelectedIndex]);
+            UpdateReadoutsWithDeviceData(DIManager.Devices[ComboBoxDevices.SelectedIndex]);
         }
 
         private void ButtonAttach_Click(object sender, EventArgs e)
         {
-            DeviceInfo targetDevice = DIManager.devices[ComboBoxDevices.SelectedIndex];
+            DeviceInfo targetDevice = DIManager.Devices[ComboBoxDevices.SelectedIndex];
             DIManager.Attach(targetDevice); // Connect to device
-            UpdateReadoutsWithDeviceData(DIManager.devices[ComboBoxDevices.SelectedIndex]);
+            UpdateReadoutsWithDeviceData(DIManager.Devices[ComboBoxDevices.SelectedIndex]);
 
             // Attach Events
-            ActiveDeviceInfo ADI;
-            if (DIManager.GetADI(targetDevice, out ADI))
+            if (DIManager.GetADI(targetDevice, out ActiveDeviceInfo ADI))
             {   // Check if device active
                 ADI.OnDeviceRemoved += DIDeviceRemoved;    // Register a handler for when the device is removed
                 ADI.OnDeviceStateChange += DeviceStateChanged; // Register a handler for when the device state changes
@@ -85,24 +84,24 @@ namespace DirectInputExplorer
 
         private void ButtonRemove_Click(object sender, EventArgs e)
         {
-            DIManager.StopAllFFBEffects(DIManager.devices[ComboBoxDevices.SelectedIndex]);
-            DIManager.Destroy(DIManager.devices[ComboBoxDevices.SelectedIndex]); // Destroy device
-            UpdateReadoutsWithDeviceData(DIManager.devices[ComboBoxDevices.SelectedIndex]);
+            DIManager.StopAllFFBEffects(DIManager.Devices[ComboBoxDevices.SelectedIndex]);
+            DIManager.Destroy(DIManager.Devices[ComboBoxDevices.SelectedIndex]); // Destroy device
+            UpdateReadoutsWithDeviceData(DIManager.Devices[ComboBoxDevices.SelectedIndex]);
             (TabController.TabPages["tabPage1"] as TabPage).Enabled = false;
         }
 
         private void TimerPoll_Tick_1(object sender, EventArgs e)
         {
             // If device connected get data
-            /*if (DIManager.devices.Length != 0 && DIManager.isDeviceActive(DIManager.devices[ComboBoxDevices.SelectedIndex])) { // Currently selected device is attached
-              FlatJoyState2 DeviceState = DIManager.GetDeviceState(DIManager.devices[ComboBoxDevices.SelectedIndex]);
+            /*if (DIManager.Devices.Length != 0 && DIManager.IsDeviceActive(DIManager.Devices[ComboBoxDevices.SelectedIndex])) { // Currently selected device is attached
+              FlatJoyState2 DeviceState = DIManager.GetDeviceState(DIManager.Devices[ComboBoxDevices.SelectedIndex]);
               LabelInput.Text = $"buttonsA: {Convert.ToString((long)DeviceState.buttonsA, 2).PadLeft(64, '0')}\nbuttonsB: {Convert.ToString((long)DeviceState.buttonsB, 2).PadLeft(64, '0')}\nlX: {DeviceState.lX}\nlY: {DeviceState.lY}\nlZ: {DeviceState.lZ}\nlU: {DeviceState.lU}\nlV: {DeviceState.lV}\nlRx: {DeviceState.lRx}\nlRy: {DeviceState.lRy}\nlRz: {DeviceState.lRz}\nlVX: {DeviceState.lVX}\nlVY: {DeviceState.lVY}\nlVZ: {DeviceState.lVZ}\nlVU: {DeviceState.lVU}\nlVV: {DeviceState.lVV}\nlVRx: {DeviceState.lVRx}\nlVRy: {DeviceState.lVRy}\nlVRz: {DeviceState.lVRz}\nlAX: {DeviceState.lAX}\nlAY: {DeviceState.lAY}\nlAZ: {DeviceState.lAZ}\nlAU: {DeviceState.lAU}\nlAV: {DeviceState.lAV}\nlARx: {DeviceState.lARx}\nlARy: {DeviceState.lARy}\nlARz: {DeviceState.lARz}\nlFX: {DeviceState.lFX}\nlFY: {DeviceState.lFY}\nlFZ: {DeviceState.lFZ}\nlFU: {DeviceState.lFU}\nlFV: {DeviceState.lFV}\nlFRx: {DeviceState.lFRx}\nlFRy: {DeviceState.lFRy}\nlFRz: {DeviceState.lFRz}\nrgdwPOV: {Convert.ToString((long)DeviceState.rgdwPOV, 2).PadLeft(16, '0')}\n";
             }*/
 
             DIManager.PollAll(); // Fetch data from all active devices
-            if (DIManager.devices.Length != 0 && DIManager.isDeviceActive(DIManager.devices[ComboBoxDevices.SelectedIndex]))
+            if (DIManager.Devices.Length != 0 && DIManager.IsDeviceActive(DIManager.Devices[ComboBoxDevices.SelectedIndex]))
             { // Currently selected device is attached
-                UpdateReadoutsWithDeviceData(DIManager.devices[ComboBoxDevices.SelectedIndex]); // Update readouts with active device data
+                UpdateReadoutsWithDeviceData(DIManager.Devices[ComboBoxDevices.SelectedIndex]); // Update readouts with active device data
             }
         }
 
@@ -125,7 +124,7 @@ namespace DirectInputExplorer
                     TriggeringCheckBox.Tag.ToString() == "Square")
                 {
                     // Create and initialize periodic effect
-                    if (!DIManager.EnableFFBEffect(DIManager.devices[ComboBoxDevices.SelectedIndex], TriggeringEffectType))
+                    if (!DIManager.EnableFFBEffect(DIManager.Devices[ComboBoxDevices.SelectedIndex], TriggeringEffectType))
                     {
                         Debug.WriteLine($"Failed to enable periodic effect");
                         TriggeringCheckBox.Checked = false;
@@ -136,7 +135,7 @@ namespace DirectInputExplorer
                     if (TriggeringCheckBox.Parent.Controls.Find("UD" + TriggeringEffectType.ToString() + "Magnitude", false).FirstOrDefault() as NumericUpDown != null)
                     {
                         UpdatePeriodicSimple(
-                            DIManager.devices[ComboBoxDevices.SelectedIndex],
+                            DIManager.Devices[ComboBoxDevices.SelectedIndex],
                             TriggeringEffectType,
                             (int)(TriggeringCheckBox.Parent.Controls.Find("UD" + TriggeringEffectType.ToString() + "Magnitude", false).FirstOrDefault() as NumericUpDown).Value,
                             TriggeringCheckBox.Parent.Controls.Find("UD" + TriggeringEffectType.ToString() + "Magnitude", false).FirstOrDefault() as NumericUpDown
@@ -147,7 +146,7 @@ namespace DirectInputExplorer
                 {
                     // Handle other effects normally
                     TriggeringCheckBox.Checked = DIManager.EnableFFBEffect(
-                        DIManager.devices[ComboBoxDevices.SelectedIndex],
+                        DIManager.Devices[ComboBoxDevices.SelectedIndex],
                         TriggeringEffectType
                     );
                 }
@@ -164,19 +163,19 @@ namespace DirectInputExplorer
                 {
                     // First stop the effect by setting magnitude to 0
                     UpdatePeriodicSimple(
-                        DIManager.devices[ComboBoxDevices.SelectedIndex],
+                        DIManager.Devices[ComboBoxDevices.SelectedIndex],
                         (FFBEffects)Enum.Parse(typeof(FFBEffects), TriggeringCheckBox.Tag.ToString()),
                         0,
                         TriggeringCheckBox.Parent.Controls.Find("UD" + TriggeringEffectType.ToString() + "Magnitude", false).FirstOrDefault() as NumericUpDown
                     );
 
                     // Then destroy the effect
-                    TriggeringCheckBox.Checked = !DIManager.DestroyFFBEffect(DIManager.devices[ComboBoxDevices.SelectedIndex], (FFBEffects)Enum.Parse(typeof(FFBEffects), TriggeringCheckBox.Tag.ToString()));
+                    TriggeringCheckBox.Checked = !DIManager.DestroyFFBEffect(DIManager.Devices[ComboBoxDevices.SelectedIndex], (FFBEffects)Enum.Parse(typeof(FFBEffects), TriggeringCheckBox.Tag.ToString()));
                 }
                 else
                 {
                     // Handle other effects normally
-                    TriggeringCheckBox.Checked = !DIManager.DestroyFFBEffect(DIManager.devices[ComboBoxDevices.SelectedIndex], TriggeringEffectType);
+                    TriggeringCheckBox.Checked = !DIManager.DestroyFFBEffect(DIManager.Devices[ComboBoxDevices.SelectedIndex], TriggeringEffectType);
                 }
             }
 
@@ -223,7 +222,7 @@ namespace DirectInputExplorer
 
         private void FFB_UpDown_ValueChanged(object sender, EventArgs e)
         {
-            DeviceInfo ActiveDevice = DIManager.devices[ComboBoxDevices.SelectedIndex];
+            DeviceInfo ActiveDevice = DIManager.Devices[ComboBoxDevices.SelectedIndex];
             NumericUpDown TrigElement = (NumericUpDown)sender;
             // Update slider(TrackBar)
             TrackBar TB = TrigElement.Parent.Controls.Find("Slider" + TrigElement.Tag, false).FirstOrDefault() as TrackBar;
@@ -339,7 +338,7 @@ namespace DirectInputExplorer
             //System.Diagnostics.Debug.WriteLine("Changed: " + TrigElement.Parent.Tag);
         }
 
-        private void UpdatePeriodicSimple(DeviceInfo activeDevice, FFBEffects effectType, int magnitude, NumericUpDown trigElement)
+        private static void UpdatePeriodicSimple(DeviceInfo activeDevice, FFBEffects effectType, int magnitude, NumericUpDown trigElement)
         {
             try
             {
@@ -350,7 +349,6 @@ namespace DirectInputExplorer
                 }
 
                 // Get the effect checkbox
-                CheckBox effectCheckBox = trigElement.Parent.Controls.Find("CB" + effectType.ToString(), false).FirstOrDefault() as CheckBox;
 
                 // First destroy any existing periodic effect
                 foreach (FFBEffects effects in new FFBEffects[] { FFBEffects.SawtoothUp, FFBEffects.SawtoothDown, FFBEffects.Square,
@@ -362,7 +360,7 @@ namespace DirectInputExplorer
                 if (!DIManager.EnableFFBEffect(activeDevice, effectType))
                 {
                     Debug.WriteLine($"UpdatePeriodicSimple: Failed to create effect {effectType}");
-                    if (effectCheckBox != null)
+                    if (trigElement.Parent.Controls.Find("CB" + effectType.ToString(), false).FirstOrDefault() is CheckBox effectCheckBox)
                     {
                         effectCheckBox.Checked = false;
                     }
@@ -373,6 +371,9 @@ namespace DirectInputExplorer
                 DIManager.UpdatePeriodicSimple(
                     activeDevice,
                     effectType,
+                    magnitude,
+                    30000,
+                    -magnitude,
                     magnitude
                 );
             }
@@ -383,7 +384,7 @@ namespace DirectInputExplorer
             }
         }
 
-        private void UpdateCustomForceSimple(DeviceInfo activeDevice, int[] forceData, uint samplePeriod, NumericUpDown trigElement)
+        private static void UpdateCustomForceSimple(DeviceInfo activeDevice, int[] forceData, uint samplePeriod, NumericUpDown trigElement)
         {
             try
             {
@@ -394,14 +395,13 @@ namespace DirectInputExplorer
                 }
 
                 // Get the effect checkbox
-                CheckBox effectCheckBox = trigElement.Parent.Controls.Find("CBCustomForce", false).FirstOrDefault() as CheckBox;
 
                 DIManager.DestroyFFBEffect(activeDevice, FFBEffects.CustomForce);
                 // Then create new effect
                 if (!DIManager.EnableFFBEffect(activeDevice, FFBEffects.CustomForce))
                 {
                     Debug.WriteLine($"UpdatePeriodicSimple: Failed to create effect \"CustomForce\"");
-                    if (effectCheckBox != null)
+                    if (trigElement.Parent.Controls.Find("CBCustomForce", false).FirstOrDefault() is CheckBox effectCheckBox)
                     {
                         effectCheckBox.Checked = false;
                     }
@@ -438,7 +438,7 @@ namespace DirectInputExplorer
         public void DeviceStateChanged(DeviceInfo device, FlatJoyState2 state)
         {
             System.Diagnostics.Debug.WriteLine($"{device.productName} Event {state.lX}");
-            if (device.guidInstance == DIManager.devices[ComboBoxDevices.SelectedIndex].guidInstance)
+            if (device.guidInstance == DIManager.Devices[ComboBoxDevices.SelectedIndex].guidInstance)
             { // If this device is selected show the state
                 LabelInput.Text = $"buttonsA: {Convert.ToString((long)state.buttonsA, 2).PadLeft(64, '0')}\nbuttonsB: {Convert.ToString((long)state.buttonsB, 2).PadLeft(64, '0')}\nlX: {state.lX}\nlY: {state.lY}\nlZ: {state.lZ}\nlU: {state.lU}\nlV: {state.lV}\nlRx: {state.lRx}\nlRy: {state.lRy}\nlRz: {state.lRz}\nlVX: {state.lVX}\nlVY: {state.lVY}\nlVZ: {state.lVZ}\nlVU: {state.lVU}\nlVV: {state.lVV}\nlVRx: {state.lVRx}\nlVRy: {state.lVRy}\nlVRz: {state.lVRz}\nlAX: {state.lAX}\nlAY: {state.lAY}\nlAZ: {state.lAZ}\nlAU: {state.lAU}\nlAV: {state.lAV}\nlARx: {state.lARx}\nlARy: {state.lARy}\nlARz: {state.lARz}\nlFX: {state.lFX}\nlFY: {state.lFY}\nlFZ: {state.lFZ}\nlFU: {state.lFU}\nlFV: {state.lFV}\nlFRx: {state.lFRx}\nlFRy: {state.lFRy}\nlFRz: {state.lFRz}\nrgdwPOV: {Convert.ToString((long)state.rgdwPOV, 2).PadLeft(16, '0')}\n";
             }
@@ -452,7 +452,7 @@ namespace DirectInputExplorer
         {
             LabelDeviceInfo.Text = $"deviceType: {Device.deviceType}\nguidInstance: {Device.guidInstance}\nguidProduct: {Device.guidProduct}\ninstanceName: {Device.instanceName}\nFFBCapable: {Device.FFBCapable}";
 
-            if (DIManager.isDeviceActive(DIManager.devices[ComboBoxDevices.SelectedIndex]))
+            if (DIManager.IsDeviceActive(DIManager.Devices[ComboBoxDevices.SelectedIndex]))
             { // Currently selected device is attached
                 (TabController.TabPages["TabInput"] as TabPage).Enabled = true; // Enable the Input Tab as we're connected
                 DIDEVCAPS DeviceCaps = DIManager.GetDeviceCapabilities(Device);
@@ -486,8 +486,8 @@ namespace DirectInputExplorer
         //////////////////////////////////////////////////////////////
         private void ButtonDebug_Click(object sender, EventArgs e)
         {
-            DirectInputManager.Native.DEBUG1(DIManager.devices[ComboBoxDevices.SelectedIndex].guidInstance, out string[] DEBUGDATA);
-            LabelDebug.Text = string.Join("\n", DEBUGDATA);
+            int hr = DirectInputManager.Native.DEBUG1(DIManager.Devices[ComboBoxDevices.SelectedIndex].guidInstance, out string[] DEBUGDATA);
+            LabelDebug.Text = string.Join(hr==0 ? "\n" : $"Error: return code {hr}\n", DEBUGDATA);
         }
     }
 }
